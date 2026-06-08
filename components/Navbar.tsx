@@ -12,7 +12,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-forest/5 bg-cream/95 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" aria-label="回到首頁" className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-forest text-lg font-black text-white">王</span>
           <span>
             <b className="block text-lg leading-none text-forest">王永才</b>
