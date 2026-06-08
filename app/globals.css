@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html { scroll-behavior: smooth; }
+body { background: #fbf7f0; color: #24483a; }
+::selection { background: #f6dadd; color: #24483a; }
+
+.page-shell { @apply mx-auto max-w-6xl px-5; }
+.section-space { @apply py-20 md:py-28; }
+.prose-local { @apply text-lg leading-9 text-forest/75; }
+.prose-local h2 { @apply mb-4 mt-12 text-2xl font-black text-forest md:text-3xl; }
+.prose-local h3 { @apply mb-3 mt-8 text-xl font-black text-forest; }
+.prose-local p { @apply my-5; }
+.prose-local ul { @apply my-5 list-disc space-y-2 pl-7; }
+.prose-local strong { @apply font-black text-forest; }
