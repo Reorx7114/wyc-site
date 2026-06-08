@@ -1,3 +1,4 @@
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { SectionTitle } from "@/components/SectionTitle";
 import { site } from "@/data/site";
 
@@ -5,11 +6,8 @@ export default function ContactPage() {
   return (
     <>
       <section className="section-space page-shell">
-        <SectionTitle
-          eyebrow="永才在這裡"
-          title="聯絡我們"
-          description="不論是一個問題、一個建議，或只是想聊聊，我們都願意好好聽你說。"
-        />
+        <div className="text-center"><BackHomeLink /></div>
+        <SectionTitle eyebrow="永才在這裡" title="聯絡我們" description="不論是一個問題、一個建議，或只是想聊聊，我們都願意好好聽你說。" />
         <div className="grid gap-5 md:grid-cols-2">
           <ContactCard title="服務專線" value={site.phone} detail="有需要，打電話來" />
           <ContactCard title="服務處地址" value={site.address} detail="歡迎來坐坐聊聊" />
@@ -33,23 +31,9 @@ export default function ContactPage() {
 }
 
 function ContactCard({ title, value, detail }: { title: string; value: string; detail: string }) {
-  return (
-    <div className="rounded-[2rem] bg-white p-7 shadow-soft">
-      <p className="font-bold text-rose">{title}</p>
-      <p className="mt-3 text-2xl font-black text-forest">{value}</p>
-      <p className="mt-2 text-forest/60">{detail}</p>
-    </div>
-  );
+  return <div className="rounded-[2rem] bg-white p-7 shadow-soft"><p className="font-bold text-rose">{title}</p><p className="mt-3 text-2xl font-black text-forest">{value}</p><p className="mt-2 text-forest/60">{detail}</p></div>;
 }
 
 function QrCard({ title, description, image }: { title: string; description: string; image: string }) {
-  return (
-    <div className="grid items-center gap-6 rounded-[2rem] bg-white p-7 shadow-soft sm:grid-cols-[180px_1fr]">
-      <img src={image} alt={`${title} QR Code`} className="mx-auto aspect-square w-full max-w-[180px] rounded-2xl border border-forest/10 bg-white object-contain p-2" />
-      <div>
-        <p className="text-2xl font-black text-forest">{title}</p>
-        <p className="mt-3 leading-7 text-forest/65">{description}</p>
-      </div>
-    </div>
-  );
+  return <div className="grid items-center gap-6 rounded-[2rem] bg-white p-7 shadow-soft sm:grid-cols-[180px_1fr]"><img src={image} alt={`${title} QR Code`} className="mx-auto aspect-square w-full max-w-[180px] rounded-2xl border border-forest/10 bg-white object-contain p-2" /><div><p className="text-2xl font-black text-forest">{title}</p><p className="mt-3 leading-7 text-forest/65">{description}</p></div></div>;
 }
