@@ -13,12 +13,11 @@ export function Footer() {
           <p>服務專線：{site.phone}</p>
           <p>服務處：{site.address}</p>
         </div>
-        <div className="flex gap-5 md:justify-end">
-          <Link href="/about">關於永才</Link>
-          <Link href="/events">近期活動</Link>
-          <Link href="/contact">聯絡我們</Link>
-          <Link href="/update-guide">更新指南</Link>
-          <Link href="/admin/login">後台登入</Link>
+        <div className="flex flex-wrap gap-x-5 gap-y-3 md:justify-end">
+          <Link href="/about" className="whitespace-nowrap">關於永才</Link>
+          <Link href="/events" className="whitespace-nowrap">近期活動</Link>
+          <Link href="/contact" className="whitespace-nowrap">聯絡我們</Link>
+          <Link href="/admin/login" className="whitespace-nowrap">後台登入</Link>
         </div>
       </div>
       <div className="border-t border-white/10 py-5 text-center text-sm text-white/50">
