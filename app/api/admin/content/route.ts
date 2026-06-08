@@ -39,12 +39,26 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   if (body.kind === "blog" || body.kind === "events") {
-    const saved = await upsertContentItem(body.kind, body.item);
-    return NextResponse.json({ ok: Boolean(saved), saved });
+    const result = await upsertContentItem(body.kind, body.item);
+    if (result.error) {
+      return NextResponse.json({
+        ok: false,
+        message: result.error,
+        supabase: result
+      }, { status: result.status ?? 500 });
+    }
+    return NextResponse.json({ ok: true, saved: result.data });
   }
   if (body.kind === "videos") {
-    const saved = await upsertVideoItem(body.item);
-    return NextResponse.json({ ok: Boolean(saved), saved });
+    const result = await upsertVideoItem(body.item);
+    if (result.error) {
+      return NextResponse.json({
+        ok: false,
+        message: result.error,
+        supabase: result
+      }, { status: result.status ?? 500 });
+    }
+    return NextResponse.json({ ok: true, saved: result.data });
   }
 
   return NextResponse.json({ ok: false, message: "未知的內容類型" }, { status: 400 });
@@ -60,12 +74,26 @@ export async function DELETE(request: Request) {
 
   const body = await request.json();
   if ((body.kind === "blog" || body.kind === "events") && body.slug) {
-    const deleted = await deleteContentItem(body.kind, body.slug);
-    return NextResponse.json({ ok: Boolean(deleted), deleted });
+    const result = await deleteContentItem(body.kind, body.slug);
+    if (result.error) {
+      return NextResponse.json({
+        ok: false,
+        message: result.error,
+        supabase: result
+      }, { status: result.status ?? 500 });
+    }
+    return NextResponse.json({ ok: true, deleted: result.data });
   }
   if (body.kind === "videos" && body.slug) {
-    const deleted = await deleteVideoItem(body.slug);
-    return NextResponse.json({ ok: Boolean(deleted), deleted });
+    const result = await deleteVideoItem(body.slug);
+    if (result.error) {
+      return NextResponse.json({
+        ok: false,
+        message: result.error,
+        supabase: result
+      }, { status: result.status ?? 500 });
+    }
+    return NextResponse.json({ ok: true, deleted: result.data });
   }
 
   return NextResponse.json({ ok: false, message: "缺少內容類型或 slug" }, { status: 400 });
