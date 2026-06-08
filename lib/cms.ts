@@ -133,6 +133,26 @@ export async function upsertVideoItem(video: Video) {
   );
 }
 
+export async function deleteContentItem(type: ContentType, slug: string) {
+  return supabaseFetch<SupabaseContentRow[]>(
+    `${tableByType[type]}?slug=eq.${encodeURIComponent(slug)}`,
+    {
+      method: "DELETE",
+      headers: { Prefer: "return=representation" }
+    }
+  );
+}
+
+export async function deleteVideoItem(slug: string) {
+  return supabaseFetch<SupabaseVideoRow[]>(
+    `videos?slug=eq.${encodeURIComponent(slug)}`,
+    {
+      method: "DELETE",
+      headers: { Prefer: "return=representation" }
+    }
+  );
+}
+
 export function isCmsConfigured() {
   return Boolean(supabaseConfig());
 }
