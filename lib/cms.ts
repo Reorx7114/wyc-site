@@ -22,6 +22,13 @@ type SupabaseVideoRow = {
   date: string;
 };
 
+export type SupabaseResult<T> = {
+  data: T | null;
+  error: string | null;
+  status: number | null;
+  endpoint: string | null;
+};
+
 const tableByType: Record<ContentType, string> = {
   blog: "blog_posts",
   events: "events"
@@ -34,27 +41,71 @@ function supabaseConfig() {
   return { url: url.replace(/\/$/, ""), key };
 }
 
-async function supabaseFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function supabaseRequest<T>(path: string, init?: RequestInit): Promise<SupabaseResult<T>> {
   const config = supabaseConfig();
-  if (!config) return null;
-
-  const response = await fetch(`${config.url}/rest/v1/${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      apikey: config.key,
-      Authorization: `Bearer ${config.key}`,
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {})
-    }
-  });
-
-  if (!response.ok) {
-    console.error(`Supabase request failed: ${response.status} ${await response.text()}`);
-    return null;
+  if (!config) {
+    return {
+      data: null,
+      error: "Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      status: null,
+      endpoint: null
+    };
   }
 
-  return response.json() as Promise<T>;
+  const endpoint = `${config.url}/rest/v1/${path}`;
+
+  try {
+    const response = await fetch(endpoint, {
+      ...init,
+      cache: "no-store",
+      headers: {
+        apikey: config.key,
+        Authorization: `Bearer ${config.key}`,
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {})
+      }
+    });
+
+    const text = await response.text();
+    let parsed: unknown = null;
+    if (text) {
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        parsed = text;
+      }
+    }
+
+    if (!response.ok) {
+      const message = typeof parsed === "string" ? parsed : JSON.stringify(parsed);
+      return {
+        data: null,
+        error: `Supabase request failed (${response.status} ${response.statusText}): ${message}`,
+        status: response.status,
+        endpoint
+      };
+    }
+
+    return {
+      data: parsed as T,
+      error: null,
+      status: response.status,
+      endpoint
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : String(error),
+      status: null,
+      endpoint
+    };
+  }
+}
+
+async function supabaseFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
+  const result = await supabaseRequest<T>(path, init);
+  if (result.error) console.error(result.error);
+  return result.data;
 }
 
 function fromContentRow(row: SupabaseContentRow): ContentItem {
@@ -112,7 +163,7 @@ export async function getVideoItems(): Promise<Video[]> {
 }
 
 export async function upsertContentItem(type: ContentType, item: ContentItem) {
-  return supabaseFetch<SupabaseContentRow[]>(
+  return supabaseRequest<SupabaseContentRow[]>(
     `${tableByType[type]}?on_conflict=slug`,
     {
       method: "POST",
@@ -123,7 +174,7 @@ export async function upsertContentItem(type: ContentType, item: ContentItem) {
 }
 
 export async function upsertVideoItem(video: Video) {
-  return supabaseFetch<SupabaseVideoRow[]>(
+  return supabaseRequest<SupabaseVideoRow[]>(
     "videos?on_conflict=slug",
     {
       method: "POST",
@@ -134,7 +185,7 @@ export async function upsertVideoItem(video: Video) {
 }
 
 export async function deleteContentItem(type: ContentType, slug: string) {
-  return supabaseFetch<SupabaseContentRow[]>(
+  return supabaseRequest<SupabaseContentRow[]>(
     `${tableByType[type]}?slug=eq.${encodeURIComponent(slug)}`,
     {
       method: "DELETE",
@@ -144,7 +195,7 @@ export async function deleteContentItem(type: ContentType, slug: string) {
 }
 
 export async function deleteVideoItem(slug: string) {
-  return supabaseFetch<SupabaseVideoRow[]>(
+  return supabaseRequest<SupabaseVideoRow[]>(
     `videos?slug=eq.${encodeURIComponent(slug)}`,
     {
       method: "DELETE",
