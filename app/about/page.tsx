@@ -1,3 +1,4 @@
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { SectionTitle } from "@/components/SectionTitle";
 import { profile } from "@/data/profile";
 
@@ -6,15 +7,19 @@ export default function AboutPage() {
     <>
       <section className="bg-gradient-to-b from-pink-50 to-cream py-20 text-center md:py-28">
         <div className="page-shell">
+          <BackHomeLink />
           <p className="font-bold tracking-[.2em] text-rose">關於王永才</p>
           <h1 className="mt-4 text-4xl font-black text-forest md:text-6xl">先做一個願意聽的人</h1>
           <p className="mx-auto mt-6 max-w-2xl text-xl leading-9 text-forest/70">不是冷冰冰的履歷，而是一段關於陪伴、承擔與地方的故事。</p>
         </div>
       </section>
       <section className="section-space page-shell grid items-center gap-12 md:grid-cols-2">
-        <div className="aspect-[4/5] rounded-[3rem] bg-gradient-to-br from-emerald-100 to-blush p-8 shadow-soft">
-          <div className="flex h-full items-end rounded-[2.5rem] border border-white/60 bg-white/40 p-8">
-            <p className="text-2xl font-black leading-relaxed text-forest">「有生命歷練，<br />更懂得心疼人。」</p>
+        <div className="overflow-hidden rounded-[3rem] bg-gradient-to-br from-pink-50 to-blush shadow-soft">
+          <div className="relative aspect-[4/5]">
+            <img src="/images/wang-real-person-crop.png" alt="王永才真人照片" className="h-full w-full object-cover object-top" />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-cream via-cream/85 to-transparent p-8 pt-24">
+              <p className="text-2xl font-black leading-relaxed text-forest">「有生命歷練，<br />更懂得心疼人。」</p>
+            </div>
           </div>
         </div>
         <div>
