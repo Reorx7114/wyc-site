@@ -34,11 +34,34 @@ const tableByType: Record<ContentType, string> = {
   events: "events"
 };
 
+function normalizeSupabaseUrl(rawUrl: string) {
+  const trimmed = rawUrl.trim().replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(trimmed);
+
+    const dashboardMarker = parsed.pathname.includes("/dashboard/project/")
+      ? "/dashboard/project/"
+      : parsed.pathname.includes("/project/")
+        ? "/project/"
+        : null;
+
+    if ((parsed.hostname === "supabase.com" || parsed.hostname === "app.supabase.com") && dashboardMarker) {
+      const projectRef = parsed.pathname.split(dashboardMarker)[1]?.split("/")[0];
+      if (projectRef) return `https://${projectRef}.supabase.co`;
+    }
+
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
 function supabaseConfig() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
-  return { url: url.replace(/\/$/, ""), key };
+  return { url: normalizeSupabaseUrl(url), key };
 }
 
 async function supabaseRequest<T>(path: string, init?: RequestInit): Promise<SupabaseResult<T>> {
@@ -47,6 +70,25 @@ async function supabaseRequest<T>(path: string, init?: RequestInit): Promise<Sup
     return {
       data: null,
       error: "Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      status: null,
+      endpoint: null
+    };
+  }
+
+  try {
+    const hostname = new URL(config.url).hostname;
+    if (!hostname.endsWith(".supabase.co")) {
+      return {
+        data: null,
+        error: `Invalid SUPABASE_URL: "${config.url}". Use the Project URL format: https://<project-ref>.supabase.co`,
+        status: null,
+        endpoint: null
+      };
+    }
+  } catch {
+    return {
+      data: null,
+      error: `Invalid SUPABASE_URL: "${config.url}". Use the Project URL format: https://<project-ref>.supabase.co`,
       status: null,
       endpoint: null
     };
