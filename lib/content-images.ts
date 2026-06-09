@@ -40,15 +40,23 @@ function storageConfig() {
   const url = normalizeSupabaseUrl(rawUrl);
   const claims = decodeJwtClaims(key);
   const urlProjectRef = projectRefFromUrl(url);
+  const isSecretKey = key.startsWith("sb_secret_");
 
-  if (claims?.role && claims.role !== "service_role") {
+  if (!isSecretKey && claims?.role && claims.role !== "service_role") {
     throw new Error(`SUPABASE_SERVICE_ROLE_KEY 實際角色為「${claims.role}」，請改用 service_role key。`);
   }
   if (claims?.ref && urlProjectRef && claims.ref !== urlProjectRef) {
     throw new Error("SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY 來自不同 Supabase 專案。");
   }
 
-  return { url, key, role: claims?.role ?? "unknown", keyProjectRef: claims?.ref ?? null, urlProjectRef };
+  return {
+    url,
+    key,
+    isSecretKey,
+    role: isSecretKey ? "secret" : claims?.role ?? "unknown",
+    keyProjectRef: claims?.ref ?? null,
+    urlProjectRef
+  };
 }
 
 function storageHeaders(contentType?: string) {
@@ -56,7 +64,7 @@ function storageHeaders(contentType?: string) {
   if (!config) return null;
   return {
     apikey: config.key,
-    Authorization: `Bearer ${config.key}`,
+    ...(!config.isSecretKey ? { Authorization: `Bearer ${config.key}` } : {}),
     ...(contentType ? { "Content-Type": contentType } : {})
   };
 }
@@ -86,7 +94,7 @@ export async function uploadContentImage(type: ContentType, slug: string, file: 
   if (!response.ok) {
     const diagnostic = [
       `key role=${config.role}`,
-      `URL/key project match=${!config.keyProjectRef || !config.urlProjectRef || config.keyProjectRef === config.urlProjectRef}`
+      `URL/key project match=${config.keyProjectRef && config.urlProjectRef ? config.keyProjectRef === config.urlProjectRef : "無法由新版 Secret Key 判定"}`
     ].join(", ");
     throw new Error(`圖片上傳失敗：${await response.text()}（${diagnostic}）`);
   }

@@ -31,6 +31,11 @@ function currentEditor(): EditorFields | null {
 }
 
 function ensureEditorTarget() {
+  document.querySelectorAll("span").forEach((label) => {
+    if (label.textContent === "網址代稱 slug") label.textContent = "網址名稱";
+    if (label.textContent === "Markdown 內文") label.textContent = "文章內文";
+  });
+
   const existing = document.getElementById("article-image-insert");
   const editor = currentEditor();
   if (!editor) {
