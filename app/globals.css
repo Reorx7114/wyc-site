@@ -15,3 +15,4 @@ body { background: #fbf7f0; color: #24483a; }
 .prose-local p { @apply my-5; }
 .prose-local ul { @apply my-5 list-disc space-y-2 pl-7; }
 .prose-local strong { @apply font-black text-forest; }
+.prose-local img { @apply my-8 h-auto w-full rounded-[1.5rem] object-contain shadow-soft md:rounded-[2rem]; }

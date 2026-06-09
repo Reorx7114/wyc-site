@@ -46,7 +46,7 @@ export function AdminLoginForm() {
         {loading ? "登入中..." : "登入後台"}
       </button>
       <p className="mt-5 text-center text-sm leading-6 text-forest/55">
-        預設示範密碼：28122288。正式上線後，請在 Vercel Environment Variables 修改 ADMIN_PASSWORD。
+        請輸入管理密碼。如需協助，請聯絡網站管理人員。
       </p>
     </form>
   );
