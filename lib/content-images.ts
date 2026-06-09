@@ -2,11 +2,53 @@ import type { ContentType } from "@/lib/markdown";
 
 const bucket = "content-images";
 
+type SupabaseJwtClaims = {
+  ref?: string;
+  role?: string;
+};
+
+function normalizeSupabaseUrl(rawUrl: string) {
+  return rawUrl.trim().replace(/\/$/, "");
+}
+
+function projectRefFromUrl(url: string) {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.endsWith(".supabase.co") ? hostname.split(".")[0] : null;
+  } catch {
+    return null;
+  }
+}
+
+function decodeJwtClaims(key: string): SupabaseJwtClaims | null {
+  const payload = key.split(".")[1];
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(Buffer.from(normalized, "base64").toString("utf8")) as SupabaseJwtClaims;
+  } catch {
+    return null;
+  }
+}
+
 function storageConfig() {
-  const url = process.env.SUPABASE_URL?.trim().replace(/\/$/, "");
+  const rawUrl = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return { url, key };
+  if (!rawUrl || !key) return null;
+
+  const url = normalizeSupabaseUrl(rawUrl);
+  const claims = decodeJwtClaims(key);
+  const urlProjectRef = projectRefFromUrl(url);
+
+  if (claims?.role && claims.role !== "service_role") {
+    throw new Error(`SUPABASE_SERVICE_ROLE_KEY 實際角色為「${claims.role}」，請改用 service_role key。`);
+  }
+  if (claims?.ref && urlProjectRef && claims.ref !== urlProjectRef) {
+    throw new Error("SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY 來自不同 Supabase 專案。");
+  }
+
+  return { url, key, role: claims?.role ?? "unknown", keyProjectRef: claims?.ref ?? null, urlProjectRef };
 }
 
 function storageHeaders(contentType?: string) {
@@ -42,7 +84,11 @@ export async function uploadContentImage(type: ContentType, slug: string, file: 
   });
 
   if (!response.ok) {
-    throw new Error(`圖片上傳失敗：${await response.text()}`);
+    const diagnostic = [
+      `key role=${config.role}`,
+      `URL/key project match=${!config.keyProjectRef || !config.urlProjectRef || config.keyProjectRef === config.urlProjectRef}`
+    ].join(", ");
+    throw new Error(`圖片上傳失敗：${await response.text()}（${diagnostic}）`);
   }
 
   return {
