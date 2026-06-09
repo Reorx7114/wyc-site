@@ -30,3 +30,17 @@ create table if not exists videos (
   date date not null,
   updated_at timestamptz not null default now()
 );
+
+-- Blog / Event content attachments. Writes and deletes use the server-side service role key.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'content-images',
+  'content-images',
+  true,
+  5242880,
+  array['image/webp', 'image/jpeg', 'image/png']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;

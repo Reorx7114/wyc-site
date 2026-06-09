@@ -8,6 +8,7 @@ import {
   upsertContentItem,
   upsertVideoItem
 } from "@/lib/cms";
+import { deleteContentImages } from "@/lib/content-images";
 
 function authorized(request: Request) {
   const password = request.headers.get("x-admin-password");
@@ -54,8 +55,7 @@ export async function POST(request: Request) {
     if (result.error) {
       return NextResponse.json({
         ok: false,
-        message: result.error,
-        supabase: result
+        message: result.error
       }, { status: result.status ?? 500 });
     }
     return NextResponse.json({ ok: true, saved: result.data });
@@ -69,11 +69,19 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ ok: false, message: "未授權" }, { status: 401 });
   }
   if (!isCmsConfigured()) {
-    return NextResponse.json({ ok: false, message: "尚未設定 Supabase，內容管理功能為停用狀態。" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "尚未設定 Supabase，內容管理功能目前只能縺解。" }, { status: 400 });
   }
 
   const body = await request.json();
   if ((body.kind === "blog" || body.kind === "events") && body.slug) {
+    try {
+      await deleteContentImages(body.kind, body.slug);
+    } catch (error) {
+      return NextResponse.json({
+        ok: false,
+        message: error instanceof Error ? error.message : "無法刪除內容附件。"
+      }, { status: 500 });
+    }
     const result = await deleteContentItem(body.kind, body.slug);
     if (result.error) {
       return NextResponse.json({
