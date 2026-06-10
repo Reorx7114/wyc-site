@@ -8,7 +8,26 @@ type SupabaseJwtClaims = {
 };
 
 function normalizeSupabaseUrl(rawUrl: string) {
-  return rawUrl.trim().replace(/\/$/, "");
+  const trimmed = rawUrl.trim().replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(trimmed);
+    const dashboardMarker = parsed.pathname.includes("/dashboard/project/")
+      ? "/dashboard/project/"
+      : parsed.pathname.includes("/project/")
+        ? "/project/"
+        : null;
+
+    if ((parsed.hostname === "supabase.com" || parsed.hostname === "app.supabase.com") && dashboardMarker) {
+      const projectRef = parsed.pathname.split(dashboardMarker)[1]?.split("/")[0];
+      if (projectRef) return `https://${projectRef}.supabase.co`;
+    }
+
+    // Storage endpoints must be built from the Project URL origin, never /rest/v1 or /storage/v1.
+    return parsed.origin;
+  } catch {
+    return trimmed;
+  }
 }
 
 function projectRefFromUrl(url: string) {
@@ -96,7 +115,7 @@ export async function uploadContentImage(type: ContentType, slug: string, file: 
       `key role=${config.role}`,
       `URL/key project match=${config.keyProjectRef && config.urlProjectRef ? config.keyProjectRef === config.urlProjectRef : "無法由新版 Secret Key 判定"}`
     ].join(", ");
-    throw new Error(`圖片上傳失敗：${await response.text()}（${diagnostic}）`);
+    throw new Error(`圖片上傳失敗：${await response.text()}（endpoint=${endpoint}，${diagnostic}）`);
   }
 
   return {
