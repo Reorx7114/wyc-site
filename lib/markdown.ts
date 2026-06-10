@@ -12,6 +12,7 @@ export type ContentItem = {
   date: string;
   excerpt: string;
   coverImage: string;
+  endImages?: string[];
   category?: string;
   location?: string;
   content: string;
@@ -36,6 +37,7 @@ export function getAllContent(type: ContentType): ContentItem[] {
         date: String(data.date ?? ""),
         excerpt: String(data.excerpt ?? ""),
         coverImage: String(data.coverImage ?? ""),
+        endImages: Array.isArray(data.endImages) ? data.endImages.map(String) : [],
         category: data.category ? String(data.category) : undefined,
         location: data.location ? String(data.location) : undefined,
         content

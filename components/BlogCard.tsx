@@ -4,7 +4,7 @@ import { ContentItem, formatDate } from "@/lib/markdown";
 export function BlogCard({ post }: { post: ContentItem }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group overflow-hidden rounded-[2rem] bg-white shadow-soft transition hover:-translate-y-1">
-      <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url("${post.coverImage}")` }} />
+      {post.coverImage && <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url("${post.coverImage}")` }} />}
       <div className="p-6">
         <div className="flex gap-3 text-sm font-bold text-rose">
           <span>{post.category}</span><span>・</span><span>{formatDate(post.date)}</span>

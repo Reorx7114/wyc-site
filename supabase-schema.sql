@@ -4,6 +4,7 @@ create table if not exists blog_posts (
   date date not null,
   category text,
   cover_image text not null default '',
+  end_images text[] not null default '{}',
   excerpt text not null default '',
   content text not null default '',
   updated_at timestamptz not null default now()
@@ -15,6 +16,7 @@ create table if not exists events (
   date date not null,
   location text,
   cover_image text not null default '',
+  end_images text[] not null default '{}',
   excerpt text not null default '',
   content text not null default '',
   updated_at timestamptz not null default now()
@@ -30,6 +32,10 @@ create table if not exists videos (
   date date not null,
   updated_at timestamptz not null default now()
 );
+
+-- V1.2.2: ordered images shown after the article body. Existing rows remain valid.
+alter table blog_posts add column if not exists end_images text[] not null default '{}';
+alter table events add column if not exists end_images text[] not null default '{}';
 
 -- Blog / Event content attachments. Writes and deletes use the server-side service role key.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

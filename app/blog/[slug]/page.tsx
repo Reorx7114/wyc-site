@@ -53,8 +53,13 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
       </header>
       <div className="page-shell py-12">
         <div className="mx-auto max-w-4xl">
-          <div className="aspect-[16/8] rounded-[2.5rem] bg-cover bg-center shadow-soft" style={{ backgroundImage: `url("${post.coverImage}")` }} />
-          <div className="prose-local mx-auto mt-10 max-w-3xl" dangerouslySetInnerHTML={{ __html: html }} />
+          {post.coverImage && <div className="aspect-[16/8] rounded-[2.5rem] bg-cover bg-center shadow-soft" style={{ backgroundImage: `url("${post.coverImage}")` }} />}
+          <div className={`prose-local mx-auto max-w-3xl ${post.coverImage ? "mt-10" : ""}`} dangerouslySetInnerHTML={{ __html: html }} />
+          {(post.endImages?.length ?? 0) > 0 && (
+            <div className="mx-auto mt-10 grid max-w-3xl gap-8">
+              {(post.endImages ?? []).map((image, index) => <img key={`${image}-${index}`} src={image} alt={`${post.title} 照片 ${index + 1}`} className="h-auto w-full rounded-[2rem] shadow-soft" />)}
+            </div>
+          )}
         </div>
       </div>
       <div className="h-20" />
