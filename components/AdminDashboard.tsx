@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import type { ContentItem } from "@/lib/markdown";
 import type { Video } from "@/data/videos";
-import { AdminImageUploader } from "@/components/AdminImageUploader";
 
 type AdminData = {
   configured: boolean;
@@ -145,8 +144,6 @@ export function AdminDashboard() {
         </div>
       )}
 
-      <AdminImageUploader password={password} />
-
       <div className="mb-6 flex flex-wrap gap-3">
         <TabButton active={tab === "blog"} onClick={() => setTab("blog")}>網誌文章</TabButton>
         <TabButton active={tab === "events"} onClick={() => setTab("events")}>近期活動</TabButton>
@@ -236,7 +233,7 @@ function ContentEditor({ type, form, setForm, onSubmit, items, disabled, passwor
     if (!form.slug.trim()) setForm(nextForm);
 
     setUploading(true);
-    setMessage(purpose === "cover" ? "正在上傳封面圖..." : `正在加入 ${selected.length} 張文末圖片...`);
+    setMessage(purpose === "cover" ? "正在上傳封面圖..." : `正在加入 ${selected.length} 張圖片...`);
     try {
       const chosen = purpose === "cover" ? selected.slice(0, 1) : selected;
       const files = await Promise.all(chosen.map(compressImage));
@@ -255,7 +252,7 @@ function ContentEditor({ type, form, setForm, onSubmit, items, disabled, passwor
       setForm(purpose === "cover"
         ? { ...nextForm, coverImage: urls[0] }
         : { ...nextForm, endImages: [...(nextForm.endImages ?? []), ...urls] });
-      setMessage(purpose === "cover" ? "封面圖已設定。" : `已加入 ${urls.length} 張文末圖片。`);
+      setMessage(purpose === "cover" ? "封面圖已設定。" : `已加入 ${urls.length} 張圖片。`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "照片上傳失敗。");
     } finally {
@@ -292,8 +289,8 @@ function ContentEditor({ type, form, setForm, onSubmit, items, disabled, passwor
         <TextArea label="摘要" value={form.excerpt} onChange={(excerpt) => setForm({ ...form, excerpt })} rows={3} />
         <TextArea label="文章內文" value={form.content} onChange={(content) => setForm({ ...form, content })} rows={14} />
         <div className="rounded-2xl border border-rose/20 bg-pink-50 p-5">
-          <p className="font-bold text-forest">文末圖片</p>
-          <p className="mt-1 text-sm leading-6 text-forest/60">可一次選擇多張照片，會依選擇順序顯示在文章正文最下方。</p>
+          <p className="font-bold text-forest">插入圖片</p>
+          <p className="mt-1 text-sm leading-6 text-forest/60">可一次選擇多張圖片，會依選擇順序顯示於文章下方。</p>
           {(form.endImages?.length ?? 0) > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
               {(form.endImages ?? []).map((image, index) => (
@@ -305,7 +302,7 @@ function ContentEditor({ type, form, setForm, onSubmit, items, disabled, passwor
             </div>
           )}
           <label className={`mt-4 inline-flex cursor-pointer rounded-full bg-rose px-6 py-3 font-bold text-white ${disabled || uploading ? "pointer-events-none opacity-50" : ""}`}>
-            {uploading ? "照片上傳中..." : "加入文末圖片"}
+            {uploading ? "照片上傳中..." : "插入圖片"}
             <input className="sr-only" type="file" accept="image/*" multiple onChange={(event) => uploadImages(event, "end")} disabled={disabled || uploading} />
           </label>
         </div>
@@ -337,7 +334,7 @@ function VideoEditor({ form, setForm, onSubmit, videos, disabled, onDelete }: {
           <TextInput label="分類" value={form.category} onChange={(category) => setForm({ ...form, category: category as Video["category"] })} />
           <TextInput label="類型 youtube / mp4" value={form.type} onChange={(value) => setForm({ ...form, type: value as Video["type"] })} />
         </div>
-        <TextInput label="影片網址或 YouTube embed" value={form.src} onChange={(src) => setForm({ ...form, src })} />
+        <TextInput label="YouTube 影片網址或 mp4 網址" value={form.src} onChange={(src) => setForm({ ...form, src })} />
         <TextArea label="說明" value={form.description} onChange={(description) => setForm({ ...form, description })} rows={5} />
         <button disabled={disabled} className="rounded-full bg-forest px-7 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">儲存</button>
       </form>

@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = `${event.title}｜王永才活動紀錄`;
   const description = event.excerpt || site.description;
-  const image = event.coverImage || site.ogImage;
+  const image = event.coverImage || event.endImages?.[0] || site.ogImage;
 
   return {
     title,
