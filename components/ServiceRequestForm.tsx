@@ -119,7 +119,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     <label className="block">
       <span className="font-bold text-forest/75">{label}</span>
-      <span className="mt-2 block">{children|</span>
+      <span className="mt-2 block">{children}</span>
     </label>
   );
 }
