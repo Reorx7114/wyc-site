@@ -1,0 +1,44 @@
+name: Seed Preview service requests
+
+on:
+  push:
+    branches: [feature/v1.3-service-platform]
+    paths: [.github/workflows/seed-preview-requests.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/v1.3-service-platform
+          fetch-depth: 0
+      - name: Create eight test requests through public Preview API
+        env:
+          API: https://wyc-site-git-feature-v13-servic-d18670-reorx7114-7726s-projects.vercel.app/api/service-requests
+        run: |
+          submit() {
+            started=$(( $(date +%s%3N) - 5000 ))
+            curl --fail-with-body "$API" -F "startedAt=$started" -F "name=$1" -F "phone=$2" -F "address=$3" -F "category=$4" -F "content=$5" -F "consent=true" -F "isTest=true" ${6:+-F "photos=@$6"}
+            echo
+            sleep 1
+          }
+          submit '測試案件01' '0900-000-001' '測試地址一號' '社區問題' '測試：路燈故障與社區照明問題。'
+          submit '測試案件02' '0900-000-002' '測試地址二號' '長照協助' '測試：希望了解長照資源與申請流程。' 'public/images/wang-chibi-person-crop.png'
+          submit '測試案件03' '0900-000-003' '測試地址三號' '急難救助' '測試：需要急難協助資訊。'
+          submit '測試案件04' '0900-000-004' '測試地址四號' '基金會服務' '測試：詢問基金會可提供的服務。' 'public/images/chongyang-bridge.png'
+          submit '測試案件05' '0900-000-005' '測試地址五號' '活動合作' '測試：社區活動合作邀請。'
+          submit '測試案件06' '0900-000-006' '測試地址六號' '其他' '測試：一般服務諮詢。' 'public/images/wang-real-person-crop.png'
+          submit '測試案件07' '0900-000-007' '測試地址七號' '社區問題' '測試：公園環境與清潔問題。'
+          submit '測試案件08' '0900-000-008' '測試地址八號' '活動合作' '測試：里民活動場地協調。'
+      - name: Remove temporary seed workflow
+        run: |
+          rm .github/workflows/seed-preview-requests.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/seed-preview-requests.yml
+          git commit -m "Remove temporary Preview seed workflow"
+          git push origin HEAD:feature/v1.3-service-platform
