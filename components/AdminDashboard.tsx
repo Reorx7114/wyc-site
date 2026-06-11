@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import type { ContentItem } from "@/lib/markdown";
 import type { Video } from "@/data/videos";
+import { AdminServiceRequests } from "@/components/AdminServiceRequests";
 
 type AdminData = {
   configured: boolean;
@@ -37,7 +38,7 @@ const emptyVideo: Video = {
 export function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [data, setData] = useState<AdminData | null>(null);
-  const [tab, setTab] = useState<"blog" | "events" | "videos">("blog");
+  const [tab, setTab] = useState<"blog" | "events" | "videos" | "service-requests">("blog");
   const [contentForm, setContentForm] = useState<ContentItem>(emptyContent);
   const [videoForm, setVideoForm] = useState<Video>(emptyVideo);
   const [message, setMessage] = useState("");
@@ -148,11 +149,14 @@ export function AdminDashboard() {
         <TabButton active={tab === "blog"} onClick={() => setTab("blog")}>網誌文章</TabButton>
         <TabButton active={tab === "events"} onClick={() => setTab("events")}>近期活動</TabButton>
         <TabButton active={tab === "videos"} onClick={() => setTab("videos")}>短影音</TabButton>
+        <TabButton active={tab === "service-requests"} onClick={() => setTab("service-requests")}>案件管理</TabButton>
       </div>
 
       {message && <p className="mb-6 rounded-2xl bg-white p-4 font-bold text-forest shadow-soft">{message}</p>}
 
-      {tab === "videos" ? (
+      {tab === "service-requests" ? (
+        <AdminServiceRequests password={password} />
+      ) : tab === "videos" ? (
         <VideoEditor form={videoForm} setForm={setVideoForm} onSubmit={saveVideo} videos={data?.videos ?? []} disabled={disabled} onDelete={(slug) => deleteItem("videos", slug)} />
       ) : (
         <ContentEditor type={tab} form={contentForm} setForm={setContentForm} onSubmit={saveContent} items={contentList} disabled={disabled} password={password} onDelete={(slug) => deleteItem(tab, slug)} setMessage={setMessage} />

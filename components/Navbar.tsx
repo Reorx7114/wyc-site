@@ -5,6 +5,7 @@ const links = [
   ["近期活動", "/events"],
   ["短影音", "/videos"],
   ["網誌", "/blog"],
+  ["服務申請", "/service-request"],
   ["聯絡我們", "/contact"]
 ];
 
@@ -26,8 +27,8 @@ export function Navbar() {
             </Link>
           ))}
         </div>
-        <Link href="/contact" className="rounded-full bg-forest px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-leaf md:hidden">
-          找永才
+        <Link href="/service-request" className="rounded-full bg-forest px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-leaf md:hidden">
+          服務申請
         </Link>
       </nav>
     </header>

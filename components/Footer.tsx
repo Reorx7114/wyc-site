@@ -16,6 +16,7 @@ export function Footer() {
         <div className="flex flex-wrap gap-x-5 gap-y-3 md:justify-end">
           <Link href="/about" className="whitespace-nowrap">關於永才</Link>
           <Link href="/events" className="whitespace-nowrap">近期活動</Link>
+          <Link href="/service-request" className="whitespace-nowrap">服務申請</Link>
           <Link href="/contact" className="whitespace-nowrap">聯絡我們</Link>
           <Link href="/admin/login" className="whitespace-nowrap">後台登入</Link>
         </div>

@@ -1,0 +1,116 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { serviceRequestStatuses, type ServiceRequest, type ServiceRequestStatus } from "@/lib/service-requests";
+
+export function AdminServiceRequests({ password }: { password: string }) {
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [message, setMessage] = useState("案件載入中...");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadRequests();
+  }, [password]);
+
+  async function loadRequests() {
+    setLoading(true);
+    const response = await fetch("/api/admin/service-requests", {
+      cache: "no-store",
+      headers: { "x-admin-password": password }
+    });
+    const result = await response.json();
+    setRequests(result.requests ?? []);
+    setMessage(result.ok ? "" : result.configured === false ? "案件管理尚未完成資料庫設定。" : result.message || "案件載入失敗。");
+    setLoading(false);
+  }
+
+  async function save(request: ServiceRequest) {
+    setMessage("案件更新中...");
+    const response = await fetch("/api/admin/service-requests", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-admin-password": password },
+      body: JSON.stringify({ id: request.id, status: request.status, adminNotes: request.adminNotes })
+    });
+    const result = await response.json();
+    setMessage(result.ok ? "案件已更新。" : result.message || "案件更新失敗。");
+    if (result.ok) await loadRequests();
+  }
+
+  async function remove(request: ServiceRequest) {
+    if (!window.confirm(`確定刪除案件 ${request.id.slice(0, 8).toUpperCase()} 嗎？相關照片也會一起刪除。`)) return;
+    setMessage("案件刪除中...");
+    const response = await fetch("/api/admin/service-requests", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", "x-admin-password": password },
+      body: JSON.stringify({ id: request.id })
+    });
+    const result = await response.json();
+    setMessage(result.ok ? "案件已刪除。" : result.message || "案件刪除失敗。");
+    if (result.ok) await loadRequests();
+  }
+
+  function updateLocal(id: string, patch: Partial<ServiceRequest>) {
+    setRequests((current) => current.map((request) => request.id === id ? { ...request, ...patch } : request));
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-forest">案件管理</h2>
+          <p className="mt-2 text-forest/60">僅供後台檢視。姓名、電話、地址與照片不會顯示在前台。</p>
+        </div>
+        <button onClick={loadRequests} className="rounded-full border border-forest/15 bg-white px-5 py-3 font-bold text-forest">重新整理</button>
+      </div>
+
+      {message && <p className="mb-6 rounded-2xl bg-white p-4 font-bold text-forest shadow-soft">{message}</p>}
+      {!loading && !requests.length && <p className="rounded-2xl bg-white p-6 text-forest/60 shadow-soft">目前沒有服務申請案件。</p>}
+
+      <div className="space-y-6">
+        {requests.map((request) => (
+          <article key={request.id} className="rounded-[2rem] bg-white p-6 shadow-soft">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <b className="text-xl text-forest">{request.name}</b>
+                  <span className="rounded-full bg-blush/60 px-3 py-1 text-sm font-bold text-forest">{request.category}</span>
+                  {request.isTest && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-800">測試資料</span>}
+                </div>
+                <p className="mt-2 text-sm text-forest/55">案件編號：{request.id.slice(0, 8).toUpperCase()} ・ {new Date(request.createdAt).toLocaleString("zh-TW")}</p>
+              </div>
+              <select value={request.status} onChange={(event) => updateLocal(request.id, { status: event.target.value as ServiceRequestStatus })} className="rounded-full border border-forest/10 bg-cream px-4 py-3 font-bold text-forest">
+                {serviceRequestStatuses.map((status) => <option key={status}>{status}</option>)}
+              </select>
+            </div>
+
+            <div className="mt-5 grid gap-4 rounded-2xl bg-cream p-5 md:grid-cols-2">
+              <p><b>電話：</b><a className="text-rose underline" href={`tel:${request.phone}`}>{request.phone}</a></p>
+              <p><b>地址：</b>{request.address || "未提供"}</p>
+            </div>
+            <p className="mt-5 whitespace-pre-wrap leading-8 text-forest/75">{request.content}</p>
+
+            {(request.imageUrls?.filter(Boolean).length ?? 0) > 0 && (
+              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                {(request.imageUrls ?? []).filter(Boolean).map((url, index) => (
+                  <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer">
+                    <img src={url} alt={`案件照片 ${index + 1}`} className="h-36 w-full rounded-2xl object-cover" />
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <label className="mt-5 block">
+              <span className="font-bold text-forest/70">內部備註</span>
+              <textarea value={request.adminNotes} onChange={(event) => updateLocal(request.id, { adminNotes: event.target.value })} rows={3} className="mt-2 w-full rounded-2xl border border-forest/10 bg-cream px-4 py-3 outline-none focus:border-rose" />
+            </label>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button onClick={() => save(request)} className="rounded-full bg-forest px-6 py-3 font-bold text-white">儲存案件</button>
+              <button onClick={() => remove(request)} className="rounded-full border border-rose/30 px-6 py-3 font-bold text-rose">刪除案件</button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
