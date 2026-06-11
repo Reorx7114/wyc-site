@@ -84,10 +84,7 @@ export function ServiceRequestForm({ allowTestData = false }: { allowTestData?: 
       </p>
 
       {allowTestData && (
-        <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-forest/65">
-          <input type="checkbox" name="isTest" value="true" className="mt-1 h-4 w-4 shrink-0 accent-rose" />
-          <span>標記為測試資料，方便在後台辨識與驗收後刪除。</span>
-        </label>
+        <input type="checkbox" name="isTest" value="true" aria-label="測試資料" className="h-4 w-4 accent-rose" />
       )}
 
       {message && <p className={`rounded-2xl p-4 font-bold ${success ? "bg-emerald-50 text-forest" : "bg-pink-50 text-rose"}`}>{message}</p>}
@@ -122,7 +119,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     <label className="block">
       <span className="font-bold text-forest/75">{label}</span>
-      <span className="mt-2 block">{children}</span>
+      <span className="mt-2 block">{children|</span>
     </label>
   );
 }
