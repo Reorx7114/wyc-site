@@ -34,11 +34,16 @@ export async function POST(request: Request) {
   const address = clean(formData.get("address"), 200);
   const category = clean(formData.get("category"), 30) as ServiceRequestCategory;
   const content = clean(formData.get("content"), 4000);
-  const isTest = clean(formData.get("isTest"), 10) === "true";
+  const consent = clean(formData.get("consent"), 10) === "true";
+  const isProduction = process.env.VERCEL_ENV === "production";
+  const isTest = !isProduction && clean(formData.get("isTest"), 10) === "true";
   const files = formData.getAll("photos").filter((item): item is File => item instanceof File && item.size > 0);
 
   if (!name || !phone || !category || !content) {
     return NextResponse.json({ ok: false, message: "請填寫姓名、電話、分類與問題內容。" }, { status: 400 });
+  }
+  if (!consent) {
+    return NextResponse.json({ ok: false, message: "請先同意資料使用說明後再送出申請。" }, { status: 400 });
   }
   if (!/^[0-9+\-()#\s]{8,25}$/.test(phone)) {
     return NextResponse.json({ ok: false, message: "電話格式不正確，請確認後再送出。" }, { status: 400 });

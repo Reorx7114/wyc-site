@@ -3,7 +3,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { serviceRequestCategories } from "@/lib/service-requests";
 
-export function ServiceRequestForm() {
+export function ServiceRequestForm({ allowTestData = false }: { allowTestData?: boolean }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
@@ -75,10 +75,20 @@ export function ServiceRequestForm() {
         <p className="mt-2 text-sm leading-6 text-forest/55">最多 5 張；每張不超過 5MB；支援 JPG、PNG、WebP。照片僅供服務團隊於後台查看。</p>
       </Field>
 
-      <label className="flex items-start gap-3 rounded-2xl bg-cream p-4 text-sm leading-6 text-forest/65">
-        <input type="checkbox" name="isTest" value="true" className="mt-1 h-4 w-4 accent-rose" />
-        <span>這是一筆測試資料。測試案件會在後台明確標示，方便驗收後刪除。</span>
+      <label className="flex items-start gap-3 rounded-2xl bg-cream p-4 text-sm leading-6 text-forest/75">
+        <input type="checkbox" name="consent" value="true" required className="mt-1 h-4 w-4 shrink-0 accent-rose" />
+        <span>我同意提供上述資料給此服務團隊聯繫、案件處理及後續服務追蹤使用。</span>
       </label>
+      <p className="-mt-3 text-sm leading-6 text-forest/55">
+        您的資料僅供本服務團隊聯繫、案件處理及後續服務追蹤使用，不會對外公開或作其他用途。
+      </p>
+
+      {allowTestData && (
+        <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-forest/65">
+          <input type="checkbox" name="isTest" value="true" className="mt-1 h-4 w-4 shrink-0 accent-rose" />
+          <span>標記為測試資料，方便在後台辨識與驗收後刪除。</span>
+        </label>
+      )}
 
       {message && <p className={`rounded-2xl p-4 font-bold ${success ? "bg-emerald-50 text-forest" : "bg-pink-50 text-rose"}`}>{message}</p>}
 
