@@ -1,0 +1,3 @@
+-- V1.4 migration executed in Supabase before Preview deployment.
+-- Adds public_reference, public_reply, hashed phone lookup fields, and server-only rate limiting.
+-- Full reviewed SQL is maintained in the V1.4 development workspace and Supabase SQL history.
