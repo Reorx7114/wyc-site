@@ -8,8 +8,6 @@ export const metadata = {
 };
 
 export default function ServiceRequestPage() {
-  const allowTestData = process.env.VERCEL_ENV !== "production";
-
   return (
     <section className="section-space page-shell">
       <div className="text-center"><BackHomeLink /></div>
@@ -18,7 +16,7 @@ export default function ServiceRequestPage() {
         title="服務申請・問題反映"
         description="請留下需要協助的事情與聯絡方式，服務團隊會仔細閱讀並盡快與您聯繫。"
       />
-      <ServiceRequestForm allowTestData={allowTestData} />
+      <ServiceRequestForm />
     </section>
   );
 }
