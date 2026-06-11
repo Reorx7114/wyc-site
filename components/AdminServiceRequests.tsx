@@ -3,21 +3,20 @@
 import { useEffect, useState } from "react";
 import { serviceRequestStatuses, type ServiceRequest, type ServiceRequestStatus } from "@/lib/service-requests";
 
+type StatusFilter = "全部" | ServiceRequestStatus;
+
 export function AdminServiceRequests({ password }: { password: string }) {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [message, setMessage] = useState("案件載入中...");
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<StatusFilter>("全部");
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadRequests();
-  }, [password]);
+  useEffect(() => { loadRequests(); }, [password]);
 
   async function loadRequests() {
     setLoading(true);
-    const response = await fetch("/api/admin/service-requests", {
-      cache: "no-store",
-      headers: { "x-admin-password": password }
-    });
+    const response = await fetch("/api/admin/service-requests", { cache: "no-store", headers: { "x-admin-password": password } });
     const result = await response.json();
     setRequests(result.requests ?? []);
     setMessage(result.ok ? "" : result.configured === false ? "案件管理尚未完成資料庫設定。" : result.message || "案件載入失敗。");
@@ -53,6 +52,14 @@ export function AdminServiceRequests({ password }: { password: string }) {
     setRequests((current) => current.map((request) => request.id === id ? { ...request, ...patch } : request));
   }
 
+  function toggleExpanded(id: string) {
+    setExpandedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  const filters: StatusFilter[] = ["全部", ...serviceRequestStatuses];
+  const filteredRequests = filter === "全部" ? requests : requests.filter((request) => request.status === filter);
+  const countFor = (status: StatusFilter) => status === "全部" ? requests.length : requests.filter((request) => request.status === status).length;
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -63,54 +70,67 @@ export function AdminServiceRequests({ password }: { password: string }) {
         <button onClick={loadRequests} className="rounded-full border border-forest/15 bg-white px-5 py-3 font-bold text-forest">重新整理</button>
       </div>
 
+      <div className="mb-6 flex flex-wrap gap-2">
+        {filters.map((status) => (
+          <button key={status} onClick={() => setFilter(status)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${filter === status ? "bg-forest text-white" : "border border-forest/10 bg-white text-forest hover:bg-cream"}`}>
+            {status}（{countFor(status)}）
+          </button>
+        ))}
+      </div>
+
       {message && <p className="mb-6 rounded-2xl bg-white p-4 font-bold text-forest shadow-soft">{message}</p>}
       {!loading && !requests.length && <p className="rounded-2xl bg-white p-6 text-forest/60 shadow-soft">目前沒有服務申請案件。</p>}
+      {!loading && requests.length > 0 && !filteredRequests.length && <p className="rounded-2xl bg-white p-6 text-forest/60 shadow-soft">目前沒有「{filter}」案件。</p>}
 
-      <div className="space-y-6">
-        {requests.map((request) => (
-          <article key={request.id} className="rounded-[2rem] bg-white p-6 shadow-soft">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <b className="text-xl text-forest">{request.name}</b>
-                  <span className="rounded-full bg-blush/60 px-3 py-1 text-sm font-bold text-forest">{request.category}</span>
-                  {request.isTest && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-800">測試資料</span>}
+      <div className="space-y-4">
+        {filteredRequests.map((request) => {
+          const expanded = expandedIds.includes(request.id);
+          return (
+            <article key={request.id} className="rounded-[2rem] bg-white p-5 shadow-soft md:p-6">
+              <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="text-xl text-forest">{request.name}</b>
+                    <span className="rounded-full bg-blush/60 px-3 py-1 text-sm font-bold text-forest">{request.category}</span>
+                    <span className="rounded-full bg-cream px-3 py-1 text-sm font-bold text-forest">{request.status}</span>
+                    {request.isTest && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-800">測試資料</span>}
+                  </div>
+                  <p className="mt-2 text-sm text-forest/55">案件編號：{request.id.slice(0, 8).toUpperCase()} ・ {new Date(request.createdAt).toLocaleString("zh-TW")}</p>
                 </div>
-                <p className="mt-2 text-sm text-forest/55">案件編號：{request.id.slice(0, 8).toUpperCase()} ・ {new Date(request.createdAt).toLocaleString("zh-TW")}</p>
+                <select value={request.status} onChange={(event) => updateLocal(request.id, { status: event.target.value as ServiceRequestStatus })} className="rounded-full border border-forest/10 bg-cream px-4 py-3 font-bold text-forest" aria-label={`${request.name}案件狀態`}>
+                  {serviceRequestStatuses.map((status) => <option key={status}>{status}</option>)}
+                </select>
+                <button onClick={() => toggleExpanded(request.id)} className="rounded-full border border-forest/15 px-5 py-3 font-bold text-forest">{expanded ? "收合詳情" : "查看詳情"}</button>
               </div>
-              <select value={request.status} onChange={(event) => updateLocal(request.id, { status: event.target.value as ServiceRequestStatus })} className="rounded-full border border-forest/10 bg-cream px-4 py-3 font-bold text-forest">
-                {serviceRequestStatuses.map((status) => <option key={status}>{status}</option>)}
-              </select>
-            </div>
 
-            <div className="mt-5 grid gap-4 rounded-2xl bg-cream p-5 md:grid-cols-2">
-              <p><b>電話：</b><a className="text-rose underline" href={`tel:${request.phone}`}>{request.phone}</a></p>
-              <p><b>地址：</b>{request.address || "未提供"}</p>
-            </div>
-            <p className="mt-5 whitespace-pre-wrap leading-8 text-forest/75">{request.content}</p>
-
-            {(request.imageUrls?.filter(Boolean).length ?? 0) > 0 && (
-              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-                {(request.imageUrls ?? []).filter(Boolean).map((url, index) => (
-                  <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer">
-                    <img src={url} alt={`案件照片 ${index + 1}`} className="h-36 w-full rounded-2xl object-cover" />
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <label className="mt-5 block">
-              <span className="font-bold text-forest/70">內部備註</span>
-              <textarea value={request.adminNotes} onChange={(event) => updateLocal(request.id, { adminNotes: event.target.value })} rows={3} className="mt-2 w-full rounded-2xl border border-forest/10 bg-cream px-4 py-3 outline-none focus:border-rose" />
-            </label>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button onClick={() => save(request)} className="rounded-full bg-forest px-6 py-3 font-bold text-white">儲存案件</button>
-              <button onClick={() => remove(request)} className="rounded-full border border-rose/30 px-6 py-3 font-bold text-rose">刪除案件</button>
-            </div>
-          </article>
-        ))}
+              {expanded && (
+                <div className="mt-5 border-t border-forest/10 pt-5">
+                  <div className="grid gap-4 rounded-2xl bg-cream p-5 md:grid-cols-2">
+                    <p><b>電話：</b><a className="text-rose underline" href={`tel:${request.phone}`}>{request.phone}</a></p>
+                    <p><b>地址：</b>{request.address || "未提供"}</p>
+                  </div>
+                  <p className="mt-5 whitespace-pre-wrap leading-8 text-forest/75">{request.content}</p>
+                  {(request.imageUrls?.filter(Boolean).length ?? 0) > 0 && (
+                    <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                      {(request.imageUrls ?? []).filter(Boolean).map((url, index) => (
+                        <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`案件照片 ${index + 1}`} className="h-36 w-full rounded-2xl object-cover" /></a>
+                      ))}
+                    </div>
+                  )}
+                  <label className="mt-5 block">
+                    <span className="font-bold text-forest/70">內部備註</span>
+                    <textarea value={request.adminNotes} onChange={(event) => updateLocal(request.id, { adminNotes: event.target.value })} rows={3} className="mt-2 w-full rounded-2xl border border-forest/10 bg-cream px-4 py-3 outline-none focus:border-rose" />
+                  </label>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <button onClick={() => save(request)} className="rounded-full bg-forest px-6 py-3 font-bold text-white">儲存案件</button>
+                    <button onClick={() => remove(request)} className="rounded-full border border-rose/30 px-6 py-3 font-bold text-rose">刪除案件</button>
+                  </div>
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </div>
   );
 }
-
